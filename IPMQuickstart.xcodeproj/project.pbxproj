@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		58BBFD371C18E27000C814F8 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 58BBFD361C18E27000C814F8 /* libc++.tbd */; };
 		8B8C1BAF1C187FC200D436FA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B8C1BAE1C187FC200D436FA /* main.m */; };
 		8B8C1BB21C187FC200D436FA /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B8C1BB11C187FC200D436FA /* AppDelegate.m */; };
 		8B8C1BB51C187FC200D436FA /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B8C1BB41C187FC200D436FA /* ViewController.m */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		58BBFD361C18E27000C814F8 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		8B8C1BAA1C187FC200D436FA /* IPMQuickstart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IPMQuickstart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8B8C1BAE1C187FC200D436FA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		8B8C1BB01C187FC200D436FA /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -34,6 +36,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				58BBFD371C18E27000C814F8 /* libc++.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -43,6 +46,7 @@
 		2DC313FEB7856D71D8555501 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				58BBFD361C18E27000C814F8 /* libc++.tbd */,
 				9272512BC5565D3551E02571 /* libPods.a */,
 			);
 			name = Frameworks;
