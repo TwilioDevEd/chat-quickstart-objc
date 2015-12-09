@@ -12,8 +12,8 @@ The first thing we need to do is grab all the necessary credentials from our
 Twilio account. To set up our back-end for IP messaging, we will need four 
 credentials from our account:
 
-Credential  | Description
-:-------------  |:-------------
+| Credential  | Description |
+| :-------------  |:------------- |
 Service Instance SID | Like a database for your IP Messaging data - [generate one in the console here](https://www.twilio.com/user/account/ip-messaging/services)
 Account SID | Your primary Twilio account identifier - find this [in the console here](https://www.twilio.com/user/account/ip-messaging/getting-started).
 API Key | Used to authenticate - [generate one here](https://www.twilio.com/user/account/ip-messaging/dev-tools/api-keys).
@@ -38,17 +38,17 @@ your Mac. Your Mac should already have PHP installed, we just need to configure
 and run the app. In the terminal, create a file to hold the four credentials we 
 retrieved from the steps above:
 
-~~~
+```
 cp config.example.php config.php
-~~~
+```
 
 Open `config.php` and enter in your account credentials inside the single quotes
 for the appropriate variables. Now we're ready to start the server. In the directory
 where you unzipped the server app, run the following command in the terminal:
 
-~~~
+```
 php -S localhost:8000
-~~~
+```
 
 To confirm everything is set up correctly, visit [http://localhost:8000](http://localhost:8000)
 in a web browser. You should be assigned a random username, and be able to enter
