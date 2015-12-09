@@ -59,7 +59,7 @@ chat messages in a simple UI that looks like this:
 Feel free to open this app up in a few browser windows and chat with yourself! You
 might also find this browser app useful when testing your iOS app, giving you an
 easy second screen to send chat messages. Leave this server app running in the Terminal 
-so that your iOS app running in the simualtor can talk to it.
+so that your iOS app running in the simulator can talk to it.
 
 Now that our server is set up, let's get the starter iOS app up and running.
 
