@@ -63,6 +63,18 @@ so that your iOS app running in the simulator can talk to it.
 
 Now that our server is set up, let's get the starter iOS app up and running.
 
+## PLEASE NOTE
+
+The source code in this application is set up to communicate with a server
+running at `http://localhost:8000`, as if you had set up the PHP server in this
+README. If you run this project on a device, it will not be able to access your
+token server on `localhost`.
+
+To test on device, your server will need to be on the public Internet. For this,
+you might consider using a solution like [ngrok](https://ngrok.com/). You would
+then update the `localhost` URL in the `ViewController` with your new public
+URL.
+
 ## Configure and Run the Mobile App
 
 Our mobile application manages dependencies via [Cocoapods](https://cocoapods.org/).
