@@ -85,26 +85,31 @@
   
   // Make JSON request to server
   NSData *jsonResponse = [NSData dataWithContentsOfURL:[NSURL URLWithString:urlString]];
-  NSError *jsonError;
-  NSDictionary *tokenResponse = [NSJSONSerialization JSONObjectWithData:jsonResponse
-                                                                options:kNilOptions
-                                                                  error:&jsonError];
-  // Handle response from server
-  if (!jsonError) {
-    self.identity = tokenResponse[@"identity"];
-    self.client = [TwilioIPMessagingClient ipMessagingClientWithToken:tokenResponse[@"token"]
-                                                             delegate:self];
-    self.navigationItem.prompt = [NSString stringWithFormat:@"Logged in as %@", self.identity];
     
-    // Join general channel
-    [self.client channelsListWithCompletion:^(TWMResult result, TWMChannels *channelsList) {
+  if (jsonResponse) {
+    NSError *jsonError;
+    NSDictionary *tokenResponse = [NSJSONSerialization JSONObjectWithData:jsonResponse
+                                                                  options:kNilOptions
+                                                                    error:&jsonError];
+    // Handle response from server
+    if (!jsonError) {
+      self.identity = tokenResponse[@"identity"];
+      self.client = [TwilioIPMessagingClient ipMessagingClientWithToken:tokenResponse[@"token"]
+                                                               delegate:self];
+      self.navigationItem.prompt = [NSString stringWithFormat:@"Logged in as %@", self.identity];
+    
+      // Join general channel
+      [self.client channelsListWithCompletion:^(TWMResult result, TWMChannels *channelsList) {
       self.channel = [channelsList channelWithUniqueName:@"general"];
-      [self.channel joinWithCompletion:^(TWMResult result) {
-        NSLog(@"joined general channel");
+        [self.channel joinWithCompletion:^(TWMResult result) {
+          NSLog(@"joined general channel");
+        }];
       }];
-    }];
+    } else {
+      NSLog(@"ViewController viewDidLoad: error parsing token from server");
+    }
   } else {
-    NSLog(@"ViewController viewDidLoad: error fetching token from server");
+      NSLog(@"ViewController viewDidLoad: error fetching token from server");
   }
 }
 
