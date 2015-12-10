@@ -102,7 +102,7 @@
       [self.client channelsListWithCompletion:^(TWMResult result, TWMChannels *channelsList) {
       self.channel = [channelsList channelWithUniqueName:@"general"];
         [self.channel joinWithCompletion:^(TWMResult result) {
-          NSLog(@"joined general channel");
+          NSLog(@"joined general channel with the following messages: %@", self.channel.messages.allObjects);
         }];
       }];
     } else {
