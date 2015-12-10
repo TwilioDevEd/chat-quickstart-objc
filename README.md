@@ -12,7 +12,7 @@ The first thing we need to do is grab all the necessary configuration values fro
 Twilio account. To set up our back-end for IP messaging, we will need four 
 pieces of information:
 
-| Credential  | Description |
+| Config Value  | Description |
 | :-------------  |:------------- |
 Service Instance SID | Like a database for your IP Messaging data - [generate one in the console here](https://www.twilio.com/user/account/ip-messaging/services)
 Account SID | Your primary Twilio account identifier - find this [in the console here](https://www.twilio.com/user/account/ip-messaging/getting-started).
