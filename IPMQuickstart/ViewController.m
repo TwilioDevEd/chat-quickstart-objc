@@ -6,6 +6,7 @@
 //  Copyright © 2015 Twilio. All rights reserved.
 //
 
+#import <TwilioCommon/TwilioCommon.h>
 #import <TwilioIPMessagingClient/TwilioIPMessagingClient.h>
 #import "ViewController.h"
 
@@ -94,17 +95,12 @@
     // Handle response from server
     if (!jsonError) {
       self.identity = tokenResponse[@"identity"];
-      self.client = [TwilioIPMessagingClient ipMessagingClientWithToken:tokenResponse[@"token"]
-                                                               delegate:self];
+      TwilioAccessManager *accessManager = [TwilioAccessManager accessManagerWithToken:tokenResponse[@"token"]
+                                                                              delegate:nil];
+      self.client = [TwilioIPMessagingClient ipMessagingClientWithAccessManager:accessManager
+                                                                     properties:nil
+                                                                       delegate:self];
       self.navigationItem.prompt = [NSString stringWithFormat:@"Logged in as %@", self.identity];
-    
-      // Join general channel
-      [self.client channelsListWithCompletion:^(TWMResult result, TWMChannels *channelsList) {
-      self.channel = [channelsList channelWithUniqueName:@"general"];
-        [self.channel joinWithCompletion:^(TWMResult result) {
-          NSLog(@"joined general channel with the following messages: %@", self.channel.messages.allObjects);
-        }];
-      }];
     } else {
       NSLog(@"ViewController viewDidLoad: error parsing token from server");
     }
@@ -193,9 +189,9 @@
   } else {
     TWMMessage *message = [self.channel.messages createMessageWithBody:textField.text];
     textField.text = @"";
-    [self.channel.messages sendMessage:message completion:^(TWMResult result) {
+    [self.channel.messages sendMessage:message completion:^(TWMResult *result) {
       [textField resignFirstResponder];
-      if (result == TWMResultFailure) {
+      if (!result.isSuccessful) {
         NSLog(@"message not sent...");
       }
     }];
@@ -204,6 +200,34 @@
 }
 
 #pragma mark - TwilioIPMessagingClientDelegate
+
+- (void)ipMessagingClient:(TwilioIPMessagingClient *)client
+synchronizationStatusChanged:(TWMClientSynchronizationStatus)status {
+  if (status == TWMClientSynchronizationStatusCompleted) {
+    NSString *defaultChannel = @"general";
+    
+    self.channel = [client.channelsList channelWithUniqueName:defaultChannel];
+    if (self.channel) {
+      [self.channel joinWithCompletion:^(TWMResult *result) {
+        NSLog(@"joined general channel with the following messages: %@", self.channel.messages.allObjects);
+      }];
+    } else {
+      // Create the general channel (for public use) if it hasn't been created yet
+      [client.channelsList createChannelWithOptions:@{
+                                                      TWMChannelOptionFriendlyName: @"General Chat Channel",
+                                                      TWMChannelOptionType: @(TWMChannelTypePublic)
+                                                      }
+                                         completion:^(TWMResult *result, TWMChannel *channel) {
+                                           self.channel = channel;
+                                           [self.channel joinWithCompletion:^(TWMResult *result) {
+                                             [self.channel setUniqueName:defaultChannel completion:^(TWMResult *result) {
+                                               NSLog(@"channel unique name set");
+                                             }];
+                                           }];
+                                         }];
+    }
+  }
+}
 
 - (void)ipMessagingClient:(TwilioIPMessagingClient *)client
                   channel:(TWMChannel *)channel
