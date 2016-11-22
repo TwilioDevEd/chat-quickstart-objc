@@ -6,18 +6,17 @@
 //  Copyright © 2015 Twilio. All rights reserved.
 //
 
-#import <TwilioCommon/TwilioCommon.h>
-#import <TwilioIPMessagingClient/TwilioIPMessagingClient.h>
+#import <TwilioChatClient/TwilioChatClient.h>
 #import "ViewController.h"
 
 #pragma mark - Interface
-@interface ViewController () <UITableViewDelegate, UITableViewDataSource, TwilioIPMessagingClientDelegate, UITextFieldDelegate>
+@interface ViewController () <UITableViewDelegate, UITableViewDataSource, TwilioChatClientDelegate, UITextFieldDelegate>
 
 #pragma mark - IP Messaging Members
 @property (strong, nonatomic) NSString *identity;
 @property (strong, nonatomic) NSMutableOrderedSet *messages;
-@property (strong, nonatomic) TWMChannel *channel;
-@property (strong, nonatomic) TwilioIPMessagingClient *client;
+@property (strong, nonatomic) TCHChannel *channel;
+@property (strong, nonatomic) TwilioChatClient *client;
 
 #pragma mark - UI Elements
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *bottomConstraint;
@@ -95,11 +94,9 @@
     // Handle response from server
     if (!jsonError) {
       self.identity = tokenResponse[@"identity"];
-      TwilioAccessManager *accessManager = [TwilioAccessManager accessManagerWithToken:tokenResponse[@"token"]
-                                                                              delegate:nil];
-      self.client = [TwilioIPMessagingClient ipMessagingClientWithAccessManager:accessManager
-                                                                     properties:nil
-                                                                       delegate:self];
+      self.client = [TwilioChatClient chatClientWithToken:tokenResponse[@"token"] properties:nil delegate:self];
+        
+     
       self.navigationItem.prompt = [NSString stringWithFormat:@"Logged in as %@", self.identity];
     } else {
       NSLog(@"ViewController viewDidLoad: error parsing token from server");
@@ -124,7 +121,7 @@
                                 animated:NO];
 }
 
-- (void)addMessages:(NSArray<TWMMessage *> *)messages {
+- (void)addMessages:(NSArray<TCHMessage *> *)messages {
   [self.messages addObjectsFromArray:messages];
   [self sortMessages];
   dispatch_async(dispatch_get_main_queue(), ^{
@@ -168,7 +165,7 @@
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
   UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"MessageCell"
                                                           forIndexPath:indexPath];
-  TWMMessage *message = [self.messages objectAtIndex:indexPath.row];
+  TCHMessage *message = [self.messages objectAtIndex:indexPath.row];
   cell.detailTextLabel.text = message.author;
   cell.textLabel.text = message.body;
   cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -187,9 +184,9 @@
   if (textField.text.length == 0) {
     [self.view endEditing:YES];
   } else {
-    TWMMessage *message = [self.channel.messages createMessageWithBody:textField.text];
+    TCHMessage *message = [self.channel.messages createMessageWithBody:textField.text];
     textField.text = @"";
-    [self.channel.messages sendMessage:message completion:^(TWMResult *result) {
+    [self.channel.messages sendMessage:message completion:^(TCHResult *result) {
       [textField resignFirstResponder];
       if (!result.isSuccessful) {
         NSLog(@"message not sent...");
@@ -199,40 +196,41 @@
   return YES;
 }
 
-#pragma mark - TwilioIPMessagingClientDelegate
+#pragma mark - TwilioChatClientDelegate
 
-- (void)ipMessagingClient:(TwilioIPMessagingClient *)client
-synchronizationStatusChanged:(TWMClientSynchronizationStatus)status {
-  if (status == TWMClientSynchronizationStatusCompleted) {
+- (void)chatClient:(TwilioChatClient *)client
+synchronizationStatusChanged:(TCHClientSynchronizationStatus)status {
+  if (status == TCHClientSynchronizationStatusCompleted) {
     NSString *defaultChannel = @"general";
     
-    self.channel = [client.channelsList channelWithUniqueName:defaultChannel];
-    if (self.channel) {
-      [self.channel joinWithCompletion:^(TWMResult *result) {
-        NSLog(@"joined general channel with the following messages: %@", self.channel.messages.allObjects);
-      }];
-    } else {
-      // Create the general channel (for public use) if it hasn't been created yet
-      [client.channelsList createChannelWithOptions:@{
-                                                      TWMChannelOptionFriendlyName: @"General Chat Channel",
-                                                      TWMChannelOptionType: @(TWMChannelTypePublic)
-                                                      }
-                                         completion:^(TWMResult *result, TWMChannel *channel) {
-                                           self.channel = channel;
-                                           [self.channel joinWithCompletion:^(TWMResult *result) {
-                                             [self.channel setUniqueName:defaultChannel completion:^(TWMResult *result) {
-                                               NSLog(@"channel unique name set");
+    [client.channelsList channelWithSidOrUniqueName:defaultChannel completion:^(TCHResult *result, TCHChannel *channel) {
+      if (channel) {
+        self.channel = channel;
+        [self.channel joinWithCompletion:^(TCHResult *result) {
+          NSLog(@"joined general channel");
+        }];
+      } else {
+        // Create the general channel (for public use) if it hasn't been created yet
+        [client.channelsList createChannelWithOptions:@{
+                                                        TCHChannelOptionFriendlyName: @"General Chat Channel",
+                                                        TCHChannelOptionType: @(TCHChannelTypePublic)
+                                                        }
+                                           completion:^(TCHResult *result, TCHChannel *channel) {
+                                             self.channel = channel;
+                                             [self.channel joinWithCompletion:^(TCHResult *result) {
+                                               [self.channel setUniqueName:defaultChannel completion:^(TCHResult *result) {
+                                                 NSLog(@"channel unique name set");
+                                               }];
                                              }];
                                            }];
-                                         }];
-    }
+      }
+    }];
   }
 }
 
-- (void)ipMessagingClient:(TwilioIPMessagingClient *)client
-                  channel:(TWMChannel *)channel
-             messageAdded:(TWMMessage *)message {
+- (void)chatClient:(TwilioChatClient *)client channel:(TCHChannel *)channel messageAdded:(TCHMessage *)message {
   [self addMessages:@[message]];
 }
+
 
 @end
