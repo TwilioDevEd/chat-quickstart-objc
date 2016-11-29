@@ -1,9 +1,9 @@
 //
 //  AppDelegate.h
-//  IPMQuickstart
+//  ChatQuickstart
 //
-//  Created by Kevin Whinnery on 12/9/15.
-//  Copyright © 2015 Twilio. All rights reserved.
+//  Created by Jeffrey Linwood on 11/29/16.
+//  Copyright © 2016 Twilio, Inc. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
