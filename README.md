@@ -1,6 +1,6 @@
 # Chat iOS Quickstart for Objective-C
 
-Looking for Swift instead? [Check out this application](https://github.com/TwilioDevEd/ipm-quickstart-swift).
+Looking for Swift instead? [Check out this application](https://github.com/TwilioDevEd/chat-quickstart-swift).
 
 In this guide, we will get you up and running quickly with a sample application
 you can build on as you learn more about Chat. Sound like a plan? Then
