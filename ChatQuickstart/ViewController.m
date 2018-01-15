@@ -9,10 +9,14 @@
 #import "ViewController.h"
 #import <TwilioChatClient/TwilioChatClient.h>
 
+// Important - update this URL with your Twilio Function URL
+const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token";
+
+
 #pragma mark - Interface
 @interface ViewController () <UITableViewDelegate, UITableViewDataSource, TwilioChatClientDelegate, UITextFieldDelegate>
 
-#pragma mark - IP Messaging Members
+#pragma mark - Twilio Chat Members
 @property (strong, nonatomic) NSString *identity;
 @property (strong, nonatomic) NSMutableOrderedSet *messages;
 @property (strong, nonatomic) TCHChannel *channel;
@@ -52,6 +56,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    // Set up the user's identity - typically after they log in
+    self.identity = @"USER_IDENTITY";
+    
     // Set up tableview
     self.tableView.delegate = self;
     self.tableView.dataSource = self;
@@ -80,8 +87,7 @@
     
     // Initialize Chat Client
     NSString *identifierForVendor = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-    NSString *tokenEndpoint = @"http://localhost:3000/token?device=%@";
-    NSString *urlString = [NSString stringWithFormat:tokenEndpoint, identifierForVendor];
+    NSString *urlString = [NSString stringWithFormat:kTokenURL, identifierForVendor];
     
     // Make JSON request to server
     NSURL *url = [NSURL URLWithString:urlString];
@@ -94,7 +100,6 @@
                                                                             error:&jsonError];
             // Handle response from server
             if (!jsonError) {
-                self.identity = tokenResponse[@"identity"];
                 [TwilioChatClient chatClientWithToken:tokenResponse[@"token"] properties:nil delegate:self completion:^(TCHResult * _Nonnull result, TwilioChatClient * _Nullable chatClient) {
                     self.client = chatClient;
                     dispatch_async(dispatch_get_main_queue(), ^{
