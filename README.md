@@ -69,9 +69,8 @@ const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token";
 You should now be able to press play and run the project in the 
 simulator. 
 
-Start sending yourself a few messages - they should start appearing both in a
-`UITableView` in the starter app, and in your browser as well if you kept that
-window open.
+Start sending yourself a few messages - they should start appearing in a
+`UITableView` in the starter app.
 
 You're all set! From here, you can start building your own application. For guidance
 on integrating the iOS SDK into your existing project, [head over to our install guide](https://www.twilio.com/docs/api/chat/sdks).
