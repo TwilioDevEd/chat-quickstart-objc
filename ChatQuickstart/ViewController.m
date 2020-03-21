@@ -10,7 +10,7 @@
 #import <TwilioChatClient/TwilioChatClient.h>
 
 // Important - update this URL with your Twilio Function URL
-const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token";
+const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?device=%@";
 
 
 #pragma mark - Interface
