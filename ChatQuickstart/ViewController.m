@@ -10,7 +10,7 @@
 #import <TwilioChatClient/TwilioChatClient.h>
 
 // Important - update this URL with your Twilio Function URL
-const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?device=%@";
+const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?identity=%@&device=%@";
 
 
 #pragma mark - Interface
@@ -87,11 +87,13 @@ const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?devic
     
     // Initialize Chat Client
     NSString *identifierForVendor = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-    NSString *urlString = [NSString stringWithFormat:kTokenURL, identifierForVendor];
+    NSString *urlString = [NSString stringWithFormat:kTokenURL, self.identity, identifierForVendor];
     
     // Make JSON request to server
     NSURL *url = [NSURL URLWithString:urlString];
     NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+    
+    __weak typeof(self) weakSelf = self;
     NSURLSessionDataTask *dataTask = [session dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (data) {
             NSError *jsonError;
@@ -101,9 +103,9 @@ const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?devic
             // Handle response from server
             if (!jsonError) {
                 [TwilioChatClient chatClientWithToken:tokenResponse[@"token"] properties:nil delegate:self completion:^(TCHResult * _Nonnull result, TwilioChatClient * _Nullable chatClient) {
-                    self.client = chatClient;
+                    weakSelf.client = chatClient;
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        self.navigationItem.prompt = [NSString stringWithFormat:@"Logged in as %@", self.identity];
+                        weakSelf.navigationItem.prompt = [NSString stringWithFormat:@"Logged in as %@", weakSelf.identity];
                     });
                 }];
             } else {
@@ -211,6 +213,8 @@ const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?devic
 }
 
 #pragma mark - TwilioChatClientDelegate
+
+
 
 - (void)chatClient:(TwilioChatClient *)client
 synchronizationStatusUpdated:(TCHClientSynchronizationStatus)status {
