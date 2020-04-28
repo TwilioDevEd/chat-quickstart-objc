@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2826727C2426E2D300D085CA /* QuickstartChatManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 2826727B2426E2D300D085CA /* QuickstartChatManager.m */; };
 		286173351DEDDD5A00247541 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 286173341DEDDD5A00247541 /* main.m */; };
 		286173381DEDDD5A00247541 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 286173371DEDDD5A00247541 /* AppDelegate.m */; };
 		2861733B1DEDDD5A00247541 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 2861733A1DEDDD5A00247541 /* ViewController.m */; };
@@ -16,6 +17,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2823FC6E2458B432004C2A40 /* ChatConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChatConstants.h; sourceTree = "<group>"; };
+		2826727A2426E2D300D085CA /* QuickstartChatManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QuickstartChatManager.h; sourceTree = "<group>"; };
+		2826727B2426E2D300D085CA /* QuickstartChatManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = QuickstartChatManager.m; sourceTree = "<group>"; };
 		286173301DEDDD5A00247541 /* ChatQuickstart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChatQuickstart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		286173341DEDDD5A00247541 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		286173361DEDDD5A00247541 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -39,11 +43,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		095A68BBC6CB5B64CF441388 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		286173271DEDDD5A00247541 = {
 			isa = PBXGroup;
 			children = (
 				286173321DEDDD5A00247541 /* ChatQuickstart */,
 				286173311DEDDD5A00247541 /* Products */,
+				095A68BBC6CB5B64CF441388 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -67,6 +79,9 @@
 				286173411DEDDD5A00247541 /* LaunchScreen.storyboard */,
 				286173441DEDDD5A00247541 /* Info.plist */,
 				286173331DEDDD5A00247541 /* Supporting Files */,
+				2826727A2426E2D300D085CA /* QuickstartChatManager.h */,
+				2826727B2426E2D300D085CA /* QuickstartChatManager.m */,
+				2823FC6E2458B432004C2A40 /* ChatConstants.h */,
 			);
 			path = ChatQuickstart;
 			sourceTree = "<group>";
@@ -119,6 +134,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -150,6 +166,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2826727C2426E2D300D085CA /* QuickstartChatManager.m in Sources */,
 				2861733B1DEDDD5A00247541 /* ViewController.m in Sources */,
 				286173381DEDDD5A00247541 /* AppDelegate.m in Sources */,
 				286173351DEDDD5A00247541 /* main.m in Sources */,
@@ -309,6 +326,7 @@
 				286173491DEDDD5A00247541 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

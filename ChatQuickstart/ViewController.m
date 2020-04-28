@@ -7,20 +7,20 @@
 //
 
 #import "ViewController.h"
+
+#import "QuickstartChatManager.h"
+
 #import <TwilioChatClient/TwilioChatClient.h>
 
-// Important - update this URL with your Twilio Function URL
-const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?identity=%@&device=%@";
 
 
 #pragma mark - Interface
-@interface ViewController () <UITableViewDelegate, UITableViewDataSource, TwilioChatClientDelegate, UITextFieldDelegate>
+@interface ViewController () <UITableViewDelegate, UITableViewDataSource,
+    TwilioChatClientDelegate, UITextFieldDelegate, QuickstartChatManagerDelegate>
 
 #pragma mark - Twilio Chat Members
 @property (strong, nonatomic) NSString *identity;
-@property (strong, nonatomic) NSMutableOrderedSet *messages;
-@property (strong, nonatomic) TCHChannel *channel;
-@property (strong, nonatomic) TwilioChatClient *client;
+@property (strong, nonatomic) QuickstartChatManager *chatManager;
 
 #pragma mark - UI Elements
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *bottomConstraint;
@@ -50,7 +50,8 @@ const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?ident
 }
 
 - (void)sharedInit {
-    self.messages = [[NSMutableOrderedSet alloc] init];
+    self.chatManager = [QuickstartChatManager new];
+    self.chatManager.delegate = self;
 }
 
 - (void)viewDidLoad {
@@ -84,47 +85,33 @@ const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?ident
                                              selector:@selector(keyboardWillHide:)
                                                  name:UIKeyboardWillHideNotification
                                                object:self.view.window];
-    
-    // Initialize Chat Client
-    NSString *identifierForVendor = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-    NSString *urlString = [NSString stringWithFormat:kTokenURL, self.identity, identifierForVendor];
-    
-    // Make JSON request to server
-    NSURL *url = [NSURL URLWithString:urlString];
-    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
-    
+}
+
+- (void) viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
     __weak typeof(self) weakSelf = self;
-    NSURLSessionDataTask *dataTask = [session dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-        if (data) {
-            NSError *jsonError;
-            NSDictionary *tokenResponse = [NSJSONSerialization JSONObjectWithData:data
-                                                                          options:kNilOptions
-                                                                            error:&jsonError];
-            // Handle response from server
-            if (!jsonError) {
-                [TwilioChatClient chatClientWithToken:tokenResponse[@"token"] properties:nil delegate:self completion:^(TCHResult * _Nonnull result, TwilioChatClient * _Nullable chatClient) {
-                    weakSelf.client = chatClient;
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        weakSelf.navigationItem.prompt = [NSString stringWithFormat:@"Logged in as %@", weakSelf.identity];
-                    });
-                }];
-            } else {
-                NSLog(@"ViewController viewDidLoad: error parsing token from server");
-            }
-        } else {
-            NSLog(@"ViewController viewDidLoad: error fetching token from server");
+    [self.chatManager login:self.identity completionHandler:^(BOOL success) {
+        if (success) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                weakSelf.navigationItem.prompt = [NSString stringWithFormat:@"Logged in as %@", weakSelf.identity];
+            });
         }
     }];
-    [dataTask resume];
-    
-    
-    
-    
+}
+
+#pragma mark - Quickstart Chat Manager Delegate
+- (void) receivedNewMessage {
+    dispatch_async(dispatch_get_main_queue(), ^{
+       [self.tableView reloadData];
+       if (self.chatManager.messages.count > 0) {
+           [self scrollToBottomMessage];
+       }
+    });
 }
 
 #pragma mark - UI Helpers
 - (void)scrollToBottomMessage {
-    if (self.messages.count == 0) {
+    if (self.chatManager.messages.count == 0) {
         return;
     }
     
@@ -135,22 +122,6 @@ const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?ident
     [self.tableView scrollToRowAtIndexPath:bottomMessageIndex
                           atScrollPosition:UITableViewScrollPositionBottom
                                   animated:NO];
-}
-
-- (void)addMessages:(NSArray<TCHMessage *> *)messages {
-    [self.messages addObjectsFromArray:messages];
-    [self sortMessages];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.tableView reloadData];
-        if (self.messages.count > 0) {
-            [self scrollToBottomMessage];
-        }
-    });
-}
-
-- (void)sortMessages {
-    [self.messages sortUsingDescriptors:@[[[NSSortDescriptor alloc] initWithKey:@"timestamp"
-                                                                      ascending:YES]]];
 }
 
 - (void)keyboardWillShow:(NSNotification *)notification {
@@ -181,7 +152,7 @@ const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?ident
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"MessageCell"
                                                             forIndexPath:indexPath];
-    TCHMessage *message = [self.messages objectAtIndex:indexPath.row];
+    TCHMessage *message = [self.chatManager.messages objectAtIndex:indexPath.row];
     cell.detailTextLabel.text = message.author;
     cell.textLabel.text = message.body;
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -191,7 +162,7 @@ const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?ident
 #pragma mark - UITableViewDataSource
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return self.messages.count;
+    return self.chatManager.messages.count;
 }
 
 #pragma mark - UITextFieldDelegate
@@ -200,55 +171,18 @@ const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?ident
     if (textField.text.length == 0) {
         [self.view endEditing:YES];
     } else {
-        TCHMessageOptions *messageOptions = [[TCHMessageOptions new] withBody:textField.text];
         textField.text = @"";
-        [self.channel.messages sendMessageWithOptions:messageOptions completion:^(TCHResult * _Nonnull result, TCHMessage * _Nullable message) {
-            [textField resignFirstResponder];
-            if (!result.isSuccessful) {
-                NSLog(@"message not sent...");
-            }
+        [self.chatManager sendMessage:textField.text completionHandler:^(TCHResult* result, TCHMessage* message) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [textField resignFirstResponder];
+                if (!result.isSuccessful) {
+                    NSLog(@"message not sent...");
+                }
+            });
         }];
+        
     }
     return YES;
-}
-
-#pragma mark - TwilioChatClientDelegate
-
-
-
-- (void)chatClient:(TwilioChatClient *)client
-synchronizationStatusUpdated:(TCHClientSynchronizationStatus)status {
-    if (status == TCHClientSynchronizationStatusCompleted) {
-        NSString *defaultChannel = @"general";
-        
-        [client.channelsList channelWithSidOrUniqueName:defaultChannel completion:^(TCHResult *result, TCHChannel *channel) {
-            if (channel) {
-                self.channel = channel;
-                [self.channel joinWithCompletion:^(TCHResult *result) {
-                    NSLog(@"joined general channel");
-                }];
-            } else {
-                // Create the general channel (for public use) if it hasn't been created yet
-                [client.channelsList createChannelWithOptions:@{
-                                                                TCHChannelOptionFriendlyName: @"General Chat Channel",
-                                                                TCHChannelOptionType: @(TCHChannelTypePublic)
-                                                                }
-                                                   completion:^(TCHResult *result, TCHChannel *channel) {
-                                                       self.channel = channel;
-                                                       [self.channel joinWithCompletion:^(TCHResult *result) {
-                                                           [self.channel setUniqueName:defaultChannel completion:^(TCHResult *result) {
-                                                               NSLog(@"channel unique name set");
-                                                           }];
-                                                       }];
-                                                   }];
-            }
-        }];
-    }
-}
-
-
-- (void)chatClient:(TwilioChatClient *)client channel:(TCHChannel *)channel messageAdded:(TCHMessage *)message {
-    [self addMessages:@[message]];
 }
 
 
