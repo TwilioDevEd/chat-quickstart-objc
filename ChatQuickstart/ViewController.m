@@ -171,9 +171,9 @@
     if (textField.text.length == 0) {
         [self.view endEditing:YES];
     } else {
-        textField.text = @"";
         [self.chatManager sendMessage:textField.text completionHandler:^(TCHResult* result, TCHMessage* message) {
             dispatch_async(dispatch_get_main_queue(), ^{
+                textField.text = @"";
                 [textField resignFirstResponder];
                 if (!result.isSuccessful) {
                     NSLog(@"message not sent...");
