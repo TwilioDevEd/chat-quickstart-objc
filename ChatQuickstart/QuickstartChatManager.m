@@ -16,7 +16,7 @@
 @property (strong, nonatomic) NSMutableOrderedSet *messages;
 @property (strong, nonatomic) TCHChannel *channel;
 @property (strong, nonatomic) TwilioChatClient *client;
-
+@property (strong, nonatomic) NSString *identity;
 @property (weak, nonatomic) id <QuickstartChatManagerDelegate> delegate;
 @end
 
@@ -38,35 +38,50 @@
 
 - (void) login:(NSString*)identity completionHandler:(void(^)(BOOL))completionHandler {
     
-    // Initialize Chat Client
+    // store identity to use when access tokens need to refresh
+    self.identity = identity;
+    
+    __weak typeof(self) weakSelf = self;
+    [self retrieveToken:identity completionHandler:^(BOOL success, NSString *token) {
+        [TwilioChatClient chatClientWithToken:token properties:nil delegate:self completion:^(TCHResult * _Nonnull result, TwilioChatClient * _Nullable chatClient) {
+                           weakSelf.client = chatClient;
+                           completionHandler(result.isSuccessful);
+        }];
+    }];
+    
+   
+}
+
+- (void) retrieveToken:(NSString*)identity completionHandler:(void(^)(BOOL success, NSString* token))completionHandler {
+
     NSString *urlString = [NSString stringWithFormat:TOKEN_URL, identity];
     
     // Make JSON request to server
     NSURL *url = [NSURL URLWithString:urlString];
     NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
-    
-    __weak typeof(self) weakSelf = self;
+        
     NSURLSessionDataTask *dataTask = [session dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-        if (data) {
-            NSError *jsonError;
-            NSDictionary *tokenResponse = [NSJSONSerialization JSONObjectWithData:data
-                                                                          options:kNilOptions
-                                                                            error:&jsonError];
-            // Handle response from server
-            if (!jsonError) {
-                [TwilioChatClient chatClientWithToken:tokenResponse[@"token"] properties:nil delegate:self completion:^(TCHResult * _Nonnull result, TwilioChatClient * _Nullable chatClient) {
-                    weakSelf.client = chatClient;
-                    completionHandler(result.isSuccessful);
-                    
-                }];
-            } else {
-                NSLog(@"ViewController viewDidLoad: error parsing token from server");
-            }
-        } else {
-            NSLog(@"ViewController viewDidLoad: error fetching token from server");
-        }
-    }];
-    [dataTask resume];
+           if (data) {
+               NSError *jsonError;
+               NSDictionary *tokenResponse = [NSJSONSerialization JSONObjectWithData:data
+                                                                             options:kNilOptions
+                                                                               error:&jsonError];
+               // Handle response from server
+               if (!jsonError) {
+                   completionHandler(true, tokenResponse[@"token"]);
+                   return;
+               } else {
+                   NSLog(@"Error parsing token from server");
+                   completionHandler(false, nil);
+                   return;
+               }
+           } else {
+               NSLog(@"Error fetching token from server");
+               completionHandler(false, nil);
+               return;
+           }
+       }];
+       [dataTask resume];
 }
 
 #pragma mark - Helper methods
@@ -82,31 +97,35 @@
 - (void)chatClient:(TwilioChatClient *)client
 synchronizationStatusUpdated:(TCHClientSynchronizationStatus)status {
     if (status == TCHClientSynchronizationStatusCompleted) {
-        NSString *defaultChannel = @"general";
         
-        [client.channelsList channelWithSidOrUniqueName:defaultChannel completion:^(TCHResult *result, TCHChannel *channel) {
+        [client.channelsList channelWithSidOrUniqueName:DEFAULT_CHANNEL_UNIQUE_NAME completion:^(TCHResult *result, TCHChannel *channel) {
             if (channel) {
                 self.channel = channel;
-                [self.channel joinWithCompletion:^(TCHResult *result) {
-                    NSLog(@"joined general channel");
-                }];
+                [self joinChannel];
             } else {
-                // Create the general channel (for public use) if it hasn't been created yet
-                [client.channelsList createChannelWithOptions:@{
-                                                                TCHChannelOptionFriendlyName: @"General Chat Channel",
-                                                                TCHChannelOptionType: @(TCHChannelTypePublic)
-                                                                }
-                                                   completion:^(TCHResult *result, TCHChannel *channel) {
-                                                       self.channel = channel;
-                                                       [self.channel joinWithCompletion:^(TCHResult *result) {
-                                                           [self.channel setUniqueName:defaultChannel completion:^(TCHResult *result) {
-                                                               NSLog(@"channel unique name set");
-                                                           }];
-                                                       }];
-                                                   }];
+                // Create the general channel if it hasn't been created yet
+                [self createChannel];
             }
         }];
     }
+}
+
+- (void)createChannel {
+    [self.client.channelsList createChannelWithOptions:@{
+        TCHChannelOptionUniqueName: DEFAULT_CHANNEL_UNIQUE_NAME,
+        TCHChannelOptionFriendlyName: DEFAULT_CHANNEL_FRIENDLY_NAME,
+        TCHChannelOptionType: @(TCHChannelTypePrivate)
+    }
+    completion:^(TCHResult *result, TCHChannel *channel) {
+        self.channel = channel;
+        [self joinChannel];
+    }];
+}
+
+- (void)joinChannel {
+    [self.channel joinWithCompletion:^(TCHResult *result) {
+        NSLog(@"joined general channel");
+    }];
 }
 
 
@@ -114,6 +133,20 @@ synchronizationStatusUpdated:(TCHClientSynchronizationStatus)status {
     [self.messages addObject:message];
     [self sortMessages];
     [self.delegate receivedNewMessage];
+}
+
+- (void)chatClientTokenWillExpire:(TwilioChatClient *)client {
+    [self retrieveToken:self.identity completionHandler:^(BOOL success, NSString *token) {
+        if (success) {
+            [self.client updateToken:token completion:^(TCHResult * _Nonnull result) {
+                if (result.isSuccessful) {
+                    NSLog(@"Updated access token on client");
+                } else {
+                    NSLog(@"Unable to update the access token");
+                }
+            }];
+        }
+    }];
 }
 
 @end

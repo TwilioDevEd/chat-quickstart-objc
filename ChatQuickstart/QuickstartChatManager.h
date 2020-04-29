@@ -14,7 +14,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol QuickstartChatManagerDelegate <NSObject>
-- (void) reloadMessages;
 - (void) receivedNewMessage;
 @end
 
