@@ -63,12 +63,12 @@ way every time.
 
 way every time. 
 
-You will need to go into `ViewController.m` and modify the URL for your
+You will need to go into `ChatConstants.h` and modify the URL for your
 Twilio Function there - each Twilio user will have a different domain to use for
 their Twilio Functions.
 
 ```
-const NSString* kTokenURL =  @"https://YOUR_DOMAIN_HERE.twil.io/chat-token";
+#define TOKEN_URL @"https://YOUR_DOMAIN_HERE.twil.io/chat-token?identity=%@";
 ```
 
 You should now be able to press play and run the project in the 
