@@ -18,10 +18,10 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface QuickstartChatManager : NSObject
-- (NSMutableOrderedSet*) messages;
+- (NSOrderedSet*) messages;
 - (void) setDelegate:(id <QuickstartChatManagerDelegate>)delegate;
-- (void) login:(NSString*)identity completionHandler:(void(^)(BOOL))completionHandler;
-- (void) sendMessage:(NSString*)messageText completionHandler:(nonnull void (^)(TCHResult * _Nonnull, TCHMessage * _Nullable))completionHandler;
+- (void) login:(NSString*)identity completionHandler:(void(^)(BOOL success))completionHandler;
+- (void) sendMessage:(NSString*)messageText completionHandler:(nonnull void (^)(TCHResult * _Nonnull result, TCHMessage * _Nullable message))completionHandler;
 @end
 
 NS_ASSUME_NONNULL_END

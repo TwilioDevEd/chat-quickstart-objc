@@ -84,30 +84,11 @@
        [dataTask resume];
 }
 
-#pragma mark - Helper methods
+#pragma mark - Chat Channel/Message helper methods
 
 - (void)sortMessages {
-    [self.messages sortUsingDescriptors:@[[[NSSortDescriptor alloc] initWithKey:@"timestamp"
+    [_messages sortUsingDescriptors:@[[[NSSortDescriptor alloc] initWithKey:@"timestamp"
                                                                       ascending:YES]]];
-}
-
-
-#pragma mark - TwilioChatClientDelegate
-
-- (void)chatClient:(TwilioChatClient *)client
-synchronizationStatusUpdated:(TCHClientSynchronizationStatus)status {
-    if (status == TCHClientSynchronizationStatusCompleted) {
-        
-        [client.channelsList channelWithSidOrUniqueName:DEFAULT_CHANNEL_UNIQUE_NAME completion:^(TCHResult *result, TCHChannel *channel) {
-            if (channel) {
-                self.channel = channel;
-                [self joinChannel];
-            } else {
-                // Create the general channel if it hasn't been created yet
-                [self createChannel];
-            }
-        }];
-    }
 }
 
 - (void)createChannel {
@@ -128,9 +109,27 @@ synchronizationStatusUpdated:(TCHClientSynchronizationStatus)status {
     }];
 }
 
+#pragma mark - TwilioChatClientDelegate
+
+- (void)chatClient:(TwilioChatClient *)client
+synchronizationStatusUpdated:(TCHClientSynchronizationStatus)status {
+    if (status == TCHClientSynchronizationStatusCompleted) {
+        [client.channelsList
+         channelWithSidOrUniqueName:DEFAULT_CHANNEL_UNIQUE_NAME
+                         completion:^(TCHResult *result, TCHChannel *channel) {
+            if (channel) {
+                self.channel = channel;
+                [self joinChannel];
+            } else {
+                // Create the channel if it hasn't been created yet
+                [self createChannel];
+            }
+        }];
+    }
+}
 
 - (void)chatClient:(TwilioChatClient *)client channel:(TCHChannel *)channel messageAdded:(TCHMessage *)message {
-    [self.messages addObject:message];
+    [_messages addObject:message];
     [self sortMessages];
     [self.delegate receivedNewMessage];
 }
